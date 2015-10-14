@@ -1,0 +1,36 @@
+#!/bin/bash 
+
+
+# make IR BSDF files
+#for filename in `ls H1G*.csv` ; do
+for filename in `ls *.csv` ; do
+
+	ftest=`echo ${filename##*_}` # part of filename after last '_'
+	if [ ! $ftest == AngularData.csv ] ; then
+
+#		echo $filename
+		echo make_irradxml_2.bsh $filename
+		./make_irradxml_2.bsh $filename
+
+	fi
+
+done
+
+# make visible BSDF files
+for filename in `ls *.xml` ; do
+#for filename in `ls h1g*.xml` ; do
+
+	ftest=`echo ${filename##*_}` # part of filename after last '_'
+	if [ ! $ftest == ir.xml ] ; then
+		if [ ! $ftest == vis.xml ] ; then
+
+#		echo $filename
+		outfilename=`echo ${filename%%.xml}_vis.xml | awk '{print toupper(substr($0,1,1))substr($0,2)}'` # part of filename before first '_', plus '_vis.xml' | first letter capitalized
+#		echo cp $filename $outfilename
+#		cp $filename $outfilename
+		echo "tr -d '\r' < $filename > $outfilename"
+		tr -d '\r' < $filename > $outfilename
+		
+		fi
+	fi
+done

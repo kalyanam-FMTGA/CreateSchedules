@@ -1,0 +1,55 @@
+#!/bin/bash 
+#! uses *_AngularData.csv
+#if [ $# -ne 2 -a  $# -ne 3 ] ; then
+#echo "Usage: make_absorb_VMX.bsh numberofLayers CSVfile [shadelayernumber]"
+#exit 1
+#fi
+
+numlayer=$1
+csvfile=$2
+shade=$3
+if [ "$shade" == "" ] ; then
+order=`cnt 5 | awk '{if(NR>'$numlayer') print 1000; else print NR}'`
+elif [ "$3" == "1" -o "$3" == "2" -o "$3" == "3" -o "$3" == "4" -o "$3" == "5" ] ; then
+order=`cnt 4 | awk '{if(NR<'${numlayer}'){ if(NR<'${shade}') print NR; else print NR+1 } else print 1000 } END{print '${shade}'}'`
+else
+echo "Usage: make_absorb_VMX.bsh numberofLayers CSVfile [shadelayernumber]"
+exit 1
+fi
+
+#echo $order
+
+ev '(cos(0*3.14159/180)+cos(5*3.14159/180))/2' > costheta.txt
+for i in {1..8} ; do ev '(cos(5*3.14159/180)+cos(15*3.14159/180))/2' >> costheta.txt ; done
+for i in {1..16} ; do ev '(cos(15*3.14159/180)+cos(25*3.14159/180))/2' >> costheta.txt ; done
+for i in {1..20} ; do ev '(cos(25*3.14159/180)+cos(35*3.14159/180))/2' >> costheta.txt ; done
+for i in {1..24} ; do ev '(cos(35*3.14159/180)+cos(45*3.14159/180))/2' >> costheta.txt ; done
+for i in {1..24} ; do ev '(cos(45*3.14159/180)+cos(55*3.14159/180))/2' >> costheta.txt ; done
+for i in {1..24} ; do ev '(cos(55*3.14159/180)+cos(65*3.14159/180))/2' >> costheta.txt ; done
+for i in {1..16} ; do ev '(cos(65*3.14159/180)+cos(75*3.14159/180))/2' >> costheta.txt ; done
+for i in {1..12} ; do ev '(cos(75*3.14159/180)+cos(90*3.14159/180))/2' >> costheta.txt ; done
+
+ev '6.283185*(cos(0)-cos(5*3.14159/180))'  > solidangle.txt
+for i in {1..8} ; do ev '6.283185*(cos(5*3.14159/180)-cos(15*3.14159/180))/8'  >> solidangle.txt; done
+for i in {1..16} ; do ev '6.283185*(cos(15*3.14159/180)-cos(25*3.14159/180))/16'  >> solidangle.txt; done
+for i in {1..20} ; do ev '6.283185*(cos(25*3.14159/180)-cos(35*3.14159/180))/20'  >> solidangle.txt; done
+for i in {1..24} ; do ev '6.283185*(cos(35*3.14159/180)-cos(45*3.14159/180))/24'  >> solidangle.txt; done
+for i in {1..24} ; do ev '6.283185*(cos(45*3.14159/180)-cos(55*3.14159/180))/24'  >> solidangle.txt; done
+for i in {1..24} ; do ev '6.283185*(cos(55*3.14159/180)-cos(65*3.14159/180))/24'  >> solidangle.txt; done
+for i in {1..16} ; do ev '6.283185*(cos(65*3.14159/180)-cos(75*3.14159/180))/16'  >> solidangle.txt; done
+for i in {1..12} ; do ev '6.283185*(cos(75*3.14159/180)-cos(90*3.14159/180))/12'  >> solidangle.txt; done
+
+echo "#?RADIANCE"
+echo "FORMAT=ascii"
+echo 
+
+
+
+for i in $order ; do 
+d=$(((i-1)*2+9))
+awk -F, '{if(NR==12) printf("%s\t",$'$d')}' $csvfile >&2
+awk -F, '{if(NR>12) print $'$d'}' $csvfile | \
+	rlam - costheta.txt solidangle.txt | \
+	awk '{out=$1*$2*$3; printf("%f\t%f\t%f\t",out,out,out)}END{printf("\n")}'
+done
+echo -e -n "\n" >&2
