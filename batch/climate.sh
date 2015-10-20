@@ -28,9 +28,10 @@ cd ../absmatrix
 
 for filename in `ls *_0_AngularData.csv` ; do
 
-#!!!!!!  This line has to be changed for different systems !!!!!
-./make_absorb_VMX.bsh $2 $filename $3 > ${filename%%_0_AngularData.csv}.vmx
-
+	if [ ! -f ${filename%%_0_AngularData.csv}.vmx ]; then
+		#!!!!!!  This line has to be changed for different systems !!!!!
+		./make_absorb_VMX.bsh $2 $filename $3 > ${filename%%_0_AngularData.csv}.vmx
+	fi
 done
 
 cd ../
